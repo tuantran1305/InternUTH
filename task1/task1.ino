@@ -17,11 +17,11 @@ unsigned long attributeInterval = 60000; // 60 seconds
 int thresholdLDR = 50;
 
 // WiFi and MQTT Server Settings
-const char* ssid = "Redmi102022";
-const char* password = "12345678";
+const char* ssid = "tieuphong9";
+const char* password = "ThaoVy1910";
 // const char* mqtt_server = "demo.thingsboard.io";
 // const char* tb_token = "0fVubgorpIzhrBMcsbgV";
-const char* mqtt_server = "thingsboard.srv524038.hstgr.cloud";
+const char* mqtt_server = "212.38.94.144";
 const char* tb_token = "YpxyrrfGDxQIJ6mrW8Hp";
 
 void setup() {
@@ -35,7 +35,7 @@ void setup() {
   setup_wifi();
 
   // Initialize MQTT
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, 1884);
   client.setCallback(mqtt_callback);
 }
 
@@ -117,7 +117,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void readAndPublishSensors() {
-  int temperature = random(10,20);
+  int temperature = random(0,100);
   float humidity = random(15,30);
 
   String payload = "{";
