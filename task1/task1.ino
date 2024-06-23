@@ -1,10 +1,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-
+#include <Arduino_JSON.h>
 // Define the pins
 #define LDR_PIN 33      // LDR 
 #define SWITCH_PIN 19    // Switch
-#define LED_PIN 4       // LED
+#define LED_PIN 2       // LED
 
 // MQTT Client
 WiFiClient espClient;
@@ -17,8 +17,8 @@ unsigned long attributeInterval = 60000; // 60 seconds
 int thresholdLDR = 50;
 
 // WiFi and MQTT Server Settings
-const char* ssid = "tieuphong9";
-const char* password = "ThaoVy1910";
+const char* ssid = "Redmi102022";
+const char* password = "12345678";
 // const char* mqtt_server = "demo.thingsboard.io";
 // const char* tb_token = "0fVubgorpIzhrBMcsbgV";
 const char* mqtt_server = "212.38.94.144";
@@ -60,7 +60,7 @@ void loop() {
   }
 
   // Switch state
-  state = digitalRead(SWITCH_PIN) == LOW;
+
   digitalWrite(LED_PIN, state ? HIGH : LOW);
 }
 
@@ -106,6 +106,19 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("] ");
   Serial.println(message);
 
+  
+  if(strcmp("v1/devices/me/attributes", topic) == 0){
+    char json[length + 1];
+    strncpy(json, (char*)payload, length);
+    json[length] = '\0';
+    Serial.println((char*)json);
+   JSONVar object = JSON.parse((char*)json);
+   if(bool(object["LED"])==true){
+     state=true;  
+   }else{
+     state=false;
+   }
+  }
   if (String(topic).endsWith("attributes/response/1")) {
     int newValue = message.toInt();
     if (newValue > 0 && newValue != thresholdLDR) {
