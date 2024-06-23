@@ -3,5 +3,5 @@ source "C:/Users/Hi/esp/v5.2.2/esp-idf/components/esp_app_format/Kconfig.projbui
 source "C:/Users/Hi/esp/v5.2.2/esp-idf/components/esp_rom/Kconfig.projbuild"
 source "C:/Users/Hi/esp/v5.2.2/esp-idf/components/esptool_py/Kconfig.projbuild"
 source "C:/Users/Hi/esp/v5.2.2/esp-idf/components/partition_table/Kconfig.projbuild"
-source "D:/Personal_project/IoT_esp32/esp32-mqtt5/main/Kconfig.projbuild"
+source "D:/iot_embedded/InternUTH/esp32-mqtt5/main/Kconfig.projbuild"
 source "C:/Users/Hi/esp/v5.2.2/esp-idf/examples/common_components/protocol_examples_common/Kconfig.projbuild"

@@ -93,7 +93,7 @@ static void print_user_property(mqtt5_user_property_handle_t user_property)
  *  This function is called by the MQTT client event loop.
  *
  * @param handler_args user data registered to the event.
- * @param base Event base for the handler(always MQTT Base in this example).
+ * @param base Event base for the handler (always MQTT Base in this example).
  * @param event_id The id for the received event.
  * @param event_data The data for the event, esp_mqtt_event_handle_t.
  */
@@ -111,7 +111,7 @@ static void mqtt5_event_handler(void *handler_args, esp_event_base_t base, int32
         print_user_property(event->property->user_property);
         esp_mqtt5_client_set_user_property(&publish_property.user_property, user_property_arr, USE_PROPERTY_ARR_SIZE);
         esp_mqtt5_client_set_publish_property(client, &publish_property);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 1);
+        msg_id = esp_mqtt_client_publish(client, "v1/devices/me/telemetry", "{\"Heart beat\":\"75\"}", 0, 1, 1);
         esp_mqtt5_client_delete_user_property(publish_property.user_property);
         publish_property.user_property = NULL;
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);

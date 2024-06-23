@@ -1,4 +1,4 @@
-# Install script for directory: D:/Personal_project/IoT_esp32/esp32-mqtt5/main
+# Install script for directory: D:/iot_embedded/InternUTH/esp32-mqtt5/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -1,4 +1,4 @@
-/* * Data converted from D:/Personal_project/IoT_esp32/esp32-mqtt5/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from D:/iot_embedded/InternUTH/esp32-mqtt5/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded
