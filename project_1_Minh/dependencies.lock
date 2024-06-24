@@ -4,6 +4,12 @@ dependencies:
     source:
       type: idf
     version: 5.2.2
+      protocol_examples_common:
+    component_hash: null
+    source:
+      path: C:\Users\Hi\esp\v5.2.2\esp-idf\examples\common_components\protocol_examples_common
+      type: local
+    version: '*'
 manifest_hash: 0bba694ed2bf6b0b1a753eaa37f1fdf0a80b8cfdeb1e7df9dc1590302259f371
 target: esp32
 version: 1.0.0
