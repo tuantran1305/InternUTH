@@ -4,15 +4,18 @@
 #include "esp_system.h"
 #include "spi_flash_mmap.h"
 #include "max30102.h"
-#include "dht11.h"
+
 #include "connect_wifi.h"
 #include "connect_mqtt.h"
+#include "dht_espidf.h"
 
 
 #define I2C_SDA 21
 #define I2C_SCL 22
 #define I2C_FRQ 100000
 #define I2C_PORT I2C_NUM_0
+
+#define DHT_IO 4
 
 max30102_config_t max30102 = {};
 
@@ -68,19 +71,9 @@ void app_main(void)
     // //Start test task
     // xTaskCreate(get_bpm, "Get BPM", 8192, NULL, 1, NULL);
 
-    //DHT11
-    DHT11_init(GPIO_NUM_25);
-
-    while(1) 
-    {
-        printf("Temperature is %d \n", DHT11_read().temperature);
-        printf("Humidity is %d\n", DHT11_read().humidity);
-        printf("Status code is %d\n", DHT11_read().status);
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
 
     //Connect wifi
-        // Khởi tạo NVS
+    //Khởi tạo NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());

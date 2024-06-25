@@ -29,9 +29,10 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
-#include "dht11.h"
+#include "dht_espidf.h"
 
-static const char *TAG = "mqtt_example";
+#define DHT_IO 4
+static const char *TAG = "DHT11_MQTT";
 
 
 static void log_error_if_nonzero(const char *message, int error_code)
@@ -44,18 +45,35 @@ static void log_error_if_nonzero(const char *message, int error_code)
 void publish_dht11_data(void *pvParameters) 
 {
     esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)pvParameters;
+    if (client == NULL) 
+    {
+        ESP_LOGE(TAG, "MQTT client is NULL");
+        vTaskDelete(NULL);
+        return;
+    }
+
     while (1) 
     {
-        // Đọc giá trị từ DHT11
-        struct dht11_reading dht11_data = DHT11_read();
-        
-        // Tạo chuỗi JSON chứa giá trị nhiệt độ và độ ẩm
-        char json_data[100];
-        snprintf(json_data, sizeof(json_data), "{\"temperature\": %d, \"humidity\": %d}", dht11_data.temperature, dht11_data.humidity);
-        
-        // Gửi chuỗi JSON qua MQTT
-        int msg_id = esp_mqtt_client_publish(client, "v1/devices/me/telemetry", json_data, 0, 1, 0);
-        ESP_LOGI(TAG, "sent data DHT11 publish successful, msg_id=%d", msg_id);
+        // Đọc giá trị từ DHT11 sử dụng driver của bạn
+        struct dht_reading dht_data = {0};
+        dht_result_t res = read_dht_sensor_data((gpio_num_t)DHT_IO, DHT11, &dht_data);
+
+        if (res == DHT_OK) 
+        {
+            // Tạo chuỗi JSON chứa giá trị nhiệt độ và độ ẩm
+            char json_data[100];
+            snprintf(json_data, sizeof(json_data), "{\"temperature\": %.1f, \"humidity\": %.1f}", 
+                     dht_data.temperature, dht_data.humidity);
+            
+            // Gửi chuỗi JSON qua MQTT
+            int msg_id = esp_mqtt_client_publish(client, "v1/devices/me/telemetry", json_data, 0, 1, 0);
+            ESP_LOGI(TAG, "Sent DHT11 data: %s, msg_id=%d", json_data, msg_id);
+        } 
+        else 
+        {
+            ESP_LOGW(TAG, "Failed to read DHT11 sensor, error: %d", res);
+        }
+
         // Delay 4 giây trước khi gửi dữ liệu lần tiếp theo
         vTaskDelay(4000 / portTICK_PERIOD_MS);
     }
@@ -80,7 +98,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        xTaskCreate(publish_dht11_data, "publish_dht11_data", 4096, NULL, 5, NULL);
+        xTaskCreate(publish_dht11_data, "publish_dht11_data", 4096, (void*)client, 5, NULL);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");

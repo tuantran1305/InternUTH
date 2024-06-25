@@ -23,7 +23,7 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
-#include "dht11.h"
+#include "dht_espidf.h"
 
 #ifdef __cplusplus
 extern "C" 
