@@ -15,8 +15,8 @@
 #include "lwip/sys.h"
 
 /* WiFi station configuration */
-#define EXAMPLE_ESP_WIFI_SSID      "Nha Mr Duc"
-#define EXAMPLE_ESP_WIFI_PASS      "0901111488"
+#define EXAMPLE_ESP_WIFI_SSID      "Tra sua TIAMO"
+#define EXAMPLE_ESP_WIFI_PASS      "trasuakemtrung"
 #define CONFIG_ESP_MAXIMUM_RETRY   5
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 

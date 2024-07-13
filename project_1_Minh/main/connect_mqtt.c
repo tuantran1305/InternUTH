@@ -1,12 +1,3 @@
-/* MQTT (over TCP) Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -29,11 +20,10 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
-#include "dht_espidf.h"
 
-#define DHT_IO 4
-static const char *TAG = "DHT11_MQTT";
-
+esp_mqtt_client_handle_t mqtt_client = NULL;
+static bool mqtt_connected = false;
+static const char *TAG = "MQTT_EXAMPLE";
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
@@ -42,68 +32,22 @@ static void log_error_if_nonzero(const char *message, int error_code)
     }
 }
 
-void publish_dht11_data(void *pvParameters) 
-{
-    esp_mqtt_client_handle_t client = (esp_mqtt_client_handle_t)pvParameters;
-    if (client == NULL) 
-    {
-        ESP_LOGE(TAG, "MQTT client is NULL");
-        vTaskDelete(NULL);
-        return;
-    }
-
-    while (1) 
-    {
-        // Đọc giá trị từ DHT11 sử dụng driver của bạn
-        struct dht_reading dht_data = {0};
-        dht_result_t res = read_dht_sensor_data((gpio_num_t)DHT_IO, DHT11, &dht_data);
-
-        if (res == DHT_OK) 
-        {
-            // Tạo chuỗi JSON chứa giá trị nhiệt độ và độ ẩm
-            char json_data[100];
-            snprintf(json_data, sizeof(json_data), "{\"temperature\": %.1f, \"humidity\": %.1f}", 
-                     dht_data.temperature, dht_data.humidity);
-            
-            // Gửi chuỗi JSON qua MQTT
-            int msg_id = esp_mqtt_client_publish(client, "v1/devices/me/telemetry", json_data, 0, 1, 0);
-            ESP_LOGI(TAG, "Sent DHT11 data: %s, msg_id=%d", json_data, msg_id);
-        } 
-        else 
-        {
-            ESP_LOGW(TAG, "Failed to read DHT11 sensor, error: %d", res);
-        }
-
-        // Delay 4 giây trước khi gửi dữ liệu lần tiếp theo
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
-    }
-}
-
-/*
- * @brief Event handler registered to receive MQTT events
- *
- *  This function is called by the MQTT client event loop.
- *
- * @param handler_args user data registered to the event.
- * @param base Event base for the handler(always MQTT Base in this example).
- * @param event_id The id for the received event.
- * @param event_data The data for the event, esp_mqtt_event_handle_t.
- */
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32 "", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        xTaskCreate(publish_dht11_data, "publish_dht11_data", 4096, (void*)client, 5, NULL);
+        mqtt_connected = true;
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+        mqtt_connected = false;
         break;
     case MQTT_EVENT_SUBSCRIBED:
+        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -123,7 +67,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
             log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
             ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-
         }
         break;
     default:
@@ -140,6 +83,7 @@ static void mqtt_app_start(void)
         .credentials.username = "hAtOjp2kejMeaJMFfpQE",
         .session.keepalive = 120,
     };
+
 #if CONFIG_BROKER_URL_FROM_STDIN
     char line[128];
 
@@ -166,9 +110,14 @@ static void mqtt_app_start(void)
 #endif /* CONFIG_BROKER_URL_FROM_STDIN */
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
+    mqtt_client = client;
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
+}
+
+bool is_mqtt_connected(void)
+{
+    return mqtt_connected;
 }
 
 void init_start_mqtt(void)
@@ -185,15 +134,14 @@ void init_start_mqtt(void)
     esp_log_level_set("transport", ESP_LOG_VERBOSE);
     esp_log_level_set("outbox", ESP_LOG_VERBOSE);
 
-    // ESP_ERROR_CHECK(nvs_flash_init());
-    // ESP_ERROR_CHECK(esp_netif_init());
-    // ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    // /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-    //  * Read "Establishing Wi-Fi or Ethernet Connection" section in
-    //  * examples/protocols/README.md for more information about this function.
-    //  */
-    // ESP_ERROR_CHECK(example_connect());
-
     mqtt_app_start();
+}
+
+esp_mqtt_client_handle_t get_mqtt_client(void) 
+{
+    if (mqtt_client == NULL) 
+    {
+        ESP_LOGE(TAG, "MQTT client is NULL");
+    }
+    return mqtt_client;
 }

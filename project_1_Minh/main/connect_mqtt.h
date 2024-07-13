@@ -23,17 +23,19 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
-#include "dht_espidf.h"
+
+extern esp_mqtt_client_handle_t mqtt_client;
 
 #ifdef __cplusplus
 extern "C" 
 {
 #endif
-void publish_dht11_data(esp_mqtt_client_handle_t client);
 void log_error_if_nonzero(const char *message, int error_code);
 void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 void mqtt_app_start(void);
 void init_start_mqtt(void);
+bool is_mqtt_connected(void);
+esp_mqtt_client_handle_t get_mqtt_client(void);
 
 #ifdef __cplusplus
 }
